@@ -1,0 +1,184 @@
+python
+# match_analysis.py
+
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# 1. Define file paths
+#    (In Kaggle, data files are usually under /kaggle/input/<dataset-folder>/...)
+#    Adjust the paths below if you unzip or place CSVs elsewhere.
+
+base_path = '/kaggle/working'  # or '/content' if running in Colab
+
+# If running in Kaggle, you might upload the CSVs into /kaggle/input/cricket-data/ for example.
+# Then you would set:
+# results_path = '/kaggle/input/cricket-data/ODI_Match_Results.csv'
+# totals_path  = '/kaggle/input/cricket-data/ODI_Match_Totals.csv'
+
+# For this example, we assume the CSVs are copied to /kaggle/working:
+results_path = os.path.join(base_path, 'ODI_Match_Results.csv')
+totals_path  = os.path.join(base_path, 'ODI_Match_Totals.csv')
+
+# 2. Load the CSVs
+df_results = pd.read_csv(results_path)
+df_totals  = pd.read_csv(totals_path)
+
+# 3. Inspect shapes and columns
+print("df_results.shape:", df_results.shape)
+print(df_results.columns.tolist())
+print("df_totals.shape:", df_totals.shape)
+print(df_totals.columns.tolist())
+
+# 4. Merge on "Start Date" so we only keep matches present in both files
+df = pd.merge(
+    df_results,
+    df_totals,
+    on='Start Date',
+    how='inner',
+    suffixes=('_res', '_tot')
+)
+
+# 5. Problem 1: Toss Impact at "The Oval"
+df_prob1 = df[['Toss', 'Result', 'Ground']].dropna(subset=['Toss','Result','Ground'])
+df_oval  = df_prob1[df_prob1['Ground'] == "The Oval"]
+
+# Count combinations of (Toss, Result) at The Oval
+won_toss_won_match   = ((df_oval['Toss'] == 'won') & (df_oval['Result'] == 'won')).sum()
+lost_toss_won_match  = ((df_oval['Toss'] == 'lost') & (df_oval['Result'] == 'won')).sum()
+won_toss_lost_match  = ((df_oval['Toss'] == 'won') & (df_oval['Result'] == 'lost')).sum()
+lost_toss_lost_match = ((df_oval['Toss'] == 'lost') & (df_oval['Result'] == 'lost')).sum()
+
+print("\n=== Toss Impact at The Oval ===")
+print(f"• Won toss & won match   : {won_toss_won_match}")
+print(f"• Lost toss & won match  : {lost_toss_won_match}")
+print(f"• Won toss & lost match  : {won_toss_lost_match}")
+print(f"• Lost toss & lost match : {lost_toss_lost_match}")
+
+# 6. Problem 2: Batting-Order Impact at "Birmingham"
+df_prob2 = df[['Bat', 'Ground', 'Opposition', 'Result']].dropna(subset=['Bat','Ground','Result'])
+df_bham  = df_prob2[df_prob2['Ground'] == "Birmingham"]
+
+# 6a. Batting First at Birmingham
+b1 = df_bham[df_bham['Bat'] == '1st']
+counts_b1 = b1['Result'].value_counts().reindex(['win','lost','no result'], fill_value=0)
+
+plt.figure(figsize=(8, 5))
+plt.pie(
+    counts_b1.values,
+    labels=counts_b1.index,
+    autopct='%1.2f%%',
+    textprops=dict(color="black")
+)
+plt.title('Birmingham: Result After Batting First', fontsize=14, fontweight="bold", pad=15)
+plt.legend(title="Result", loc="center left", bbox_to_anchor=(1.15, 0.5))
+plt.tight_layout()
+plt.show()
+
+# 6b. Batting Second at Birmingham
+b2 = df_bham[df_bham['Bat'] == '2nd']
+counts_b2 = b2['Result'].value_counts().reindex(['win','lost','no result'], fill_value=0)
+
+plt.figure(figsize=(8, 5))
+plt.pie(
+    counts_b2.values,
+    labels=counts_b2.index,
+    autopct='%1.2f%%',
+    textprops=dict(color="black")
+)
+plt.title('Birmingham: Result After Batting Second', fontsize=14, fontweight="bold", pad=15)
+plt.legend(title="Result", loc="center left", bbox_to_anchor=(1.15, 0.5))
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+## CSV Dataset Examples
+
+Save the following contents as three separate files in the same folder as `match_analysis.py`. You can expand the rows as needed; these examples illustrate structure and allow the script to run.
+
+### 1. `ODI_Match_Results.csv`
+
+```
+Start Date,Ground,Toss,Bat,Opposition,Result
+2021-07-01,The Oval,won,1st,India,win
+2021-07-01,The Oval,lost,2nd,Australia,lost
+2021-08-05,Birmingham,won,1st,England,lost
+2021-08-05,Birmingham,lost,2nd,South Africa,win
+2021-09-10,The Oval,won,2nd,New Zealand,win
+2021-09-10,The Oval,lost,1st,Pakistan,lost
+2021-10-15,Birmingham,won,1st,Sri Lanka,win
+2021-10-15,Birmingham,lost,2nd,West Indies,lost
+```
+
+* **Columns**:
+
+  * `Start Date` – “YYYY-MM-DD” (merge key)
+  * `Ground`      – e.g., “The Oval”, “Birmingham”
+  * `Toss`        – “won” or “lost”
+  * `Bat`         – “1st” or “2nd”
+  * `Opposition`  – Opponent team name
+  * `Result`      – “win”, “lost”, or “no result”
+
+---
+
+### 2. `ODI_Match_Totals.csv`
+
+```
+Start Date,TotalRuns,Overs
+2021-07-01,275,50
+2021-08-05,300,50
+2021-09-10,260,50
+2021-10-15,285,50
+```
+
+* **Columns**:
+
+  * `Start Date` – Same dates as in `ODI_Match_Results.csv`
+  * `TotalRuns`  – Total runs scored in match (example numbers)
+  * `Overs`      – Overs completed (example: 50)
+
+---
+
+### 3. `WC_players.csv`
+
+> *(Not strictly used in this analysis; included for completeness)*
+
+```
+Player,Team,Matches,Runs
+Virat Kohli,India,254,12169
+Joe Root,England,152,6109
+Babar Azam,Pakistan,83,3806
+Steve Smith,Australia,128,4378
+Kane Williamson,New Zealand,151,6170
+```
+
+* **Columns**:
+
+  * `Player`   – Player name
+  * `Team`     – Player’s national team
+  * `Matches`  – Number of ODIs played
+  * `Runs`     – Total ODI runs scored
+
+---
+
+## Usage Instructions
+
+1. **Place all three CSV files** (`ODI_Match_Results.csv`, `ODI_Match_Totals.csv`, `WC_players.csv`) in the same directory as `match_analysis.py`.
+   In Kaggle Kernels, you may upload them to `/kaggle/working/`.
+
+2. **Run the script**:
+
+   ```bash
+   python match_analysis.py
+   ```
+
+   * It will print the toss‐vs‐result counts at The Oval.
+   * It will display two pie charts for Birmingham (batting first vs. batting second).
+
+3. **Adjust data**:
+
+   * You can add more rows to either CSV—just ensure `Start Date` matches between the two data files for merging.
+   * Update ground names exactly (case‐sensitive) if you want to analyze other venu
