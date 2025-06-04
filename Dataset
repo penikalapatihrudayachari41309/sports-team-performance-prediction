@@ -1,0 +1,46 @@
+1. `ODI_Match_Results.csv`
+
+csv
+Start Date,Ground,Toss,Bat,Opposition,Result
+2021-07-01,The Oval,won,1st,India,win
+2021-07-01,The Oval,lost,2nd,Australia,lost
+2021-08-05,Birmingham,won,1st,England,lost
+2021-08-05,Birmingham,lost,2nd,South Africa,win
+2021-09-10,The Oval,won,2nd,New Zealand,win
+2021-09-10,The Oval,lost,1st,Pakistan,lost
+2021-10-15,Birmingham,won,1st,Sri Lanka,win
+2021-10-15,Birmingham,lost,2nd,West Indies,lost
+
+
+2. `ODI_Match_Totals.csv`
+
+csv
+Start Date,TotalRuns,Overs
+2021-07-01,275,50
+2021-08-05,300,50
+2021-09-10,260,50
+2021-10-15,285,50
+
+
+3. `WC_players.csv` (Optional – not used in final merged analysis)
+
+csv
+Player,Team,Matches,Runs
+Virat Kohli,India,254,12169
+Joe Root,England,152,6109
+Babar Azam,Pakistan,83,3806
+Steve Smith,Australia,128,4378
+Kane Williamson,New Zealand,151,6170
+
+
+
+
+Instructions to Use
+
+* Save each of the above tables in a separate `.csv` file:
+
+  * `ODI_Match_Results.csv`
+  * `ODI_Match_Totals.csv`
+  * `WC_players.csv` (optional)
+
+* Place them in the same directory as your Python file (`match_analysis.py`), or upload them to the correct folder in a Jupyter/Kaggle/Colab environment (e.g., `/kaggle/working/` or `/content/`).
